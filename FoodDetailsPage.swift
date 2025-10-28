@@ -1,11 +1,3 @@
-//
-//  FoodDetailsPage.swift
-//  WeatherUI
-//
-//  Created by Ouadia Essendoubi on 1/2/23.
-//  Copyright © 2023 Ouadia Essendoubi. All rights reserved.
-//
-
 import SwiftUI
 
 struct FoodDetailsPage: View {
