@@ -1,11 +1,3 @@
-//
-//  FoodOrderController.swift
-//  WeatherUI
-//
-//  Created by Ouadia Essendoubi on 12/23/22.
-//  Copyright © 2022 Ouadia Essendoubi. All rights reserved.
-//
-
 import Foundation
 
 public class FoodOrderController: ObservableObject {
