@@ -1,202 +1,170 @@
 import SwiftUI
 
 struct FoodDetailsPage: View {
- 
-    var food:Food?
-    
-    var body: some View {
-        
-        ZStack {
-            Color(.lightYellow)
-                .ignoresSafeArea(.all)
-            
-            VStack {
-                AppbarView()
-                    .padding(.top)
-                
-                FoodCardContent(food: self.food)
-            }
-            .padding(.horizontal)
-        }
-        .navigationBarTitle("")
-        .navigationBarHidden(true)
-    }
-}
 
-struct AppbarView: View {
-    
     @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        
-        HStack {
-            Button(action: {
-                dismiss()
-            })
-            {
-                Image(systemName: "arrow.left")
-                    .foregroundStyle(.pink)
-                    .padding()
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 15))
-            }
-            
-            Spacer()
-            
-            Image(systemName: "circle.grid.2x2")
-                .padding()
-                .foregroundStyle(.pink)
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
-        }
-    }
-}
-
-struct FoodCardContent: View {
-        
+    @ObservedObject var foodController: FoodOrderController
     var food: Food?
-    @State var countrt: Int = 1
-    
+
+    @State private var quantity: Int = 1
+    @State private var addedToCart: Bool = false
+
     var body: some View {
-        
-        GeometryReader { proxy in
-            VStack(spacing: 15) {
-                Image(food?.imagePath ?? "bur1")
-                    .resizable()
-                    .frame(width: 230, height: 230)
-                
-                HStack(spacing: 30) {
-                    Text("-")
-                        .foregroundStyle(.white)
-                        .font(.title)
-                        .bold()
-                        .onTapGesture {
-                            (self.countrt > 1) ?  (self.countrt-=1) : (self.countrt = 0)
-                    }
-                    
-                    Text(String(self.countrt))
-                        .foregroundStyle(.white)
-                        .font(.body)
-                        .bold()
-                    
-                    Text("+")
-                        .foregroundStyle(.white)
-                        .font(.body)
-                        .bold()
-                        .onTapGesture {
-                            (self.countrt < 20) ?  (self.countrt+=1) : (self.countrt = 20)
-                    }
+        VStack(alignment: .leading, spacing: 16) {
+
+            // Custom app bar
+            HStack {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(.pink)
+                        .padding(8)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(radius: 2)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(.pink)
-                .clipShape(RoundedRectangle(cornerRadius: 30))
-                
-                HStack(alignment: .center) {
-                    VStack(alignment:.leading) {
-                        
-                        Text(self.food?.name ?? "Beef Burger")
-                            .font(.largeTitle)
-                            .bold()
-                        
-                        Text(self.food?.subtiltle ?? "cheesy burger")
-                            .foregroundStyle(.gray)
-                            .font(.subheadline)
-                    }
-                    
-                    Spacer()
-                    
+
+                Spacer()
+
+                Text("Details")
+                    .font(.headline)
+
+                Spacer()
+
+                Image(systemName: "circle.grid.2x2")
+                    .foregroundStyle(.pink)
+                    .padding(8)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(radius: 2)
+            }
+            .padding([.horizontal, .top])
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+
+                    // Image
+                    Image(food?.imagePath ?? "bur1")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                        .shadow(radius: 4)
+                        .padding(.top, 8)
+
+                    // Name, favorite button & subtitle
                     HStack {
-                        Text("$")
-                            .font(.body)
-                            .bold()
-                            .foregroundStyle(.pink)
-                        
-                        Text(String(food?.price ?? 5))
+                        Text(food?.name ?? "Food item")
                             .font(.title)
                             .bold()
+
+                        Spacer()
+
+                        if let food = food {
+                            Button {
+                                foodController.toggleFavorite(food)
+                            } label: {
+                                Image(systemName: foodController.isFavorite(food) ? "heart.fill" : "heart")
+                                    .foregroundStyle(.pink)
+                            }
+                        }
                     }
-                }
-                
-                Spacer()
-                
-                HStack {
-                    HStack {
-                        Image(systemName: "star.fill")
-                            .foregroundStyle(.yellow)
-                        
-                        Text("4,8")
+
+                    if let subtitle = food?.subtiltle, !subtitle.isEmpty {
+                        Text(subtitle)
                             .font(.subheadline)
-                            .bold()
-                            .foregroundStyle(.black)
+                            .foregroundStyle(.gray)
                     }
-                    
-                    Spacer()
-                    
-                    HStack{
-                        Image(systemName: "flame.fill")
-                            .foregroundStyle(.orange)
-                        
-                        Text("150 Kcal")
-                            .foregroundStyle(.black)
-                            .font(.subheadline)
-                            .bold()
-                    }
-                    
-                    Spacer()
-                    
-                    HStack {
-                        Image(systemName: "timer")
-                            .foregroundStyle(.red)
-                        
-                        Text("5-10 Min")
-                            .foregroundStyle(.black)
-                            .font(.subheadline)
-                            .bold()
-                    }
-                }
-                
-                Spacer()
-                
-                Text(food?.description ??  "")
-                    .foregroundStyle(.gray)
-                    .font(.subheadline)
-                
-                Spacer()
-                
-                Button(
-                    action: {
-                        print("test")
-                })
-                {
-                    Text("Add To Cart")
-                        .foregroundStyle(.white)
-                        .font(.headline)
+
+                    // Price
+                    Text(String(format: "$%.2f", food?.price ?? 0))
+                        .font(.title2)
                         .bold()
-                        .padding(.horizontal, 120)
-                        .padding(.vertical, 20)
-                        .background(.pink)
-                        .clipShape(RoundedRectangle(cornerRadius: 15))
+                        .foregroundStyle(.pink)
+                        .padding(.top, 4)
+
+                    // Description
+                    Text(food?.description ?? "Delicious food item.")
+                        .font(.body)
+                        .foregroundStyle(.gray)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    // Quantity selector
+                    HStack(spacing: 16) {
+                        Text("Quantity")
+                            .font(.headline)
+
+                        Spacer()
+
+                        HStack(spacing: 16) {
+                            Button {
+                                if quantity > 1 { quantity -= 1 }
+                            } label: {
+                                Image(systemName: "minus.circle.fill")
+                            }
+
+                            Text("\(quantity)")
+                                .font(.headline)
+                                .frame(width: 32)
+
+                            Button {
+                                if quantity < 20 { quantity += 1 }
+                            } label: {
+                                Image(systemName: "plus.circle    fill")
+                            }
+                        }
+                        .font(.title2)
+                        .foregroundStyle(.pink)
+                    }
+                    .padding(.top, 8)
+
+                    // Add to cart button
+                    Button {
+                        if let food = food {
+                            foodController.addToCart(food: food, quantity: quantity)
+                            addedToCart = true
+                        }
+                    } label: {
+                        Text("Add To Cart")
+                            .font(.headline)
+                            .bold()
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.pink)
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                            .shadow(radius: 3)
+                    }
+                    .padding(.top, 16)
+
+                    if addedToCart {
+                        Text("Added to cart!")
+                            .font(.subheadline)
+                            .foregroundStyle(.green)
+                            .padding(.top, 4)
+                    }
+
+                    Spacer(minLength: 24)
                 }
-                
-                Spacer()
+                .padding(.horizontal)
             }
-            .padding(.vertical)
-            .background(
-                VStack {
-                    Color.white
-                        .frame(width: proxy.size.width * 1.1)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 50))
-                .padding(.top,120)
-             
-            )
-            .ignoresSafeArea(.all)
         }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarBackButtonHidden(true)
     }
 }
 
-
 #Preview {
-    FoodDetailsPage()
+    FoodDetailsPage(
+        foodController: FoodOrderController(),
+        food: Food(
+            name: "Cheese Burger",
+            category: "Burger",
+            subtiltle: "With extra cheese",
+            price: 9.99,
+            imagePath: "bur1",
+            description: "A tasty burger with fresh ingredients and melted cheese."
+        )
+    )
 }
+
